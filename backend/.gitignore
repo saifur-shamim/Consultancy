@@ -1,0 +1,10 @@
+# Secret files
+.env
+db.sqlite3
+local_settings.py
+
+# Python Virtual Environments
+venv/
+env/
+ENV/
+.venv/
