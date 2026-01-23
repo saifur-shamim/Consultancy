@@ -18,3 +18,15 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class ConsultantProfile(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="consultant_profile"
+    )
+    specialization = models.CharField(max_length=255)
+    experience_years = models.PositiveIntegerField()
+    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return self.user.username
