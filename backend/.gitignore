@@ -1,13 +1,18 @@
-# Secret files
-.env
-db.sqlite3
-local_settings.py
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Python Virtual Environments
-venv/
+# Django / general Python web projects
+*.pyc
+*.pyo
+*.pyd
+.Python
 env/
-ENV/
-.venv/
+venv/
+.env
+.env.local
+.env.*
 text.text
 
 #username: super_admin
