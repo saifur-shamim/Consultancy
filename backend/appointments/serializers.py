@@ -40,3 +40,15 @@ class AppointmentListSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
         )
+
+
+class AppointmentStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = ("status",)
+
+    def validate_status(self, value):
+        allowed = ["CONFIRMED", "COMPLETED", "CANCELLED"]
+        if value not in allowed:
+            raise serializers.ValidationError("Invalid status update.")
+        return value
