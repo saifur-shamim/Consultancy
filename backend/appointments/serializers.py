@@ -1,54 +1,35 @@
 from rest_framework import serializers
 from .models import Appointment
+from consultants.models import ConsultantAvailability
 
 
 class AppointmentCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Appointment
-        fields = ("consultant", "firm", "scheduled_at")
-
-    def validate(self, data):
-        conflict = Appointment.objects.filter(
-            consultant=data["consultant"],
-            scheduled_at=data["scheduled_at"],
-            status__in=["PENDING", "CONFIRMED"],
-        ).exists()
-
-        if conflict:
-            raise serializers.ValidationError(
-                "Consultant is not available at this time."
-            )
-
-        return data
-
-    def create(self, validated_data):
-        user = self.context["request"].user
-        return Appointment.objects.create(client=user, **validated_data)
-
-
-class AppointmentListSerializer(serializers.ModelSerializer):
-    client_name = serializers.CharField(source="client.full_name", read_only=True)
-    firm_name = serializers.CharField(source="firm.name", read_only=True)
+    availability_id = serializers.PrimaryKeyRelatedField(
+        queryset=ConsultantAvailability.objects.all(), source="availability"
+    )
 
     class Meta:
         model = Appointment
-        fields = (
-            "id",
-            "client_name",
-            "firm_name",
-            "scheduled_at",
-            "status",
-            "created_at",
-        )
+        fields = ("availability_id", "firm")
 
+    def validate_availability(self, availability):
+        if availability.is_booked:
+            raise serializers.ValidationError("Slot already booked.")
+        return availability
 
 class AppointmentStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
-        fields = ("status",)
+        fields = ["status"]
 
     def validate_status(self, value):
         allowed = ["CONFIRMED", "COMPLETED", "CANCELLED"]
         if value not in allowed:
-            raise serializers.ValidationError("Invalid status update.")
+            raise serializers.ValidationError("Invalid status")
         return value
+
+
+class AppointmentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = "__all__"

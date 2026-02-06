@@ -8,5 +8,4 @@ class FirmCreateSerializer(serializers.ModelSerializer):
         fields = ("name", "slug")
 
     def create(self, validated_data):
-        user = self.context["request"].user
-        return Firm.objects.create(owner=user, **validated_data)
+        return Firm.objects.create(owner=self.context["request"].user, **validated_data)

@@ -3,6 +3,7 @@ from django.conf import settings
 
 User = settings.AUTH_USER_MODEL
 
+
 class Firm(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)

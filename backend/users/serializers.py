@@ -7,28 +7,24 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "password", "role"]
+        fields = ("id", "username", "email", "password", "role")
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data.get("email"),
-            password=validated_data["password"],
-            role=validated_data.get("role", "CLIENT"),
-        )
-        return user
+        return User.objects.create_user(**validated_data)
 
 
 class ConsultantSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email"]
+        fields = ("id", "username", "email")
+
 
 class ConsultantCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
         fields = ("username", "email", "password")
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data, role="CONSULTANT")
-
+        return User.objects.create_user(role="CONSULTANT", **validated_data)

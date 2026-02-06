@@ -1,35 +1,52 @@
 from rest_framework import generics
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
+
 from .models import Appointment
-from .serializers import AppointmentCreateSerializer,  AppointmentListSerializer, AppointmentStatusSerializer
+from .serializers import (
+    AppointmentCreateSerializer,
+    AppointmentStatusSerializer,
+    AppointmentListSerializer,
+)
+from consultants.models import ConsultantAvailability
 from users.permissions import IsClient, IsConsultant
-from rest_framework.exceptions import PermissionDenied
+
 
 class BookAppointmentView(generics.CreateAPIView):
-    queryset = Appointment.objects.all()
     serializer_class = AppointmentCreateSerializer
     permission_classes = [IsClient]
 
+    @transaction.atomic
+    def perform_create(self, serializer):
+        availability = serializer.validated_data["availability"]
+        availability = ConsultantAvailability.objects.select_for_update().get(
+            id=availability.id
+        )
 
-class MyAppointmentsView(generics.ListAPIView):
-    """
-    Consultant views his own appointments
-    """
+        if availability.is_booked:
+            raise ValidationError("Slot already booked")
 
+        serializer.save(
+            client=self.request.user,
+            consultant=availability.consultant,
+            scheduled_at=availability.start_time,
+        )
+
+        availability.is_booked = True
+        availability.save()
+
+
+class ConsultantAppointmentListView(generics.ListAPIView):
     serializer_class = AppointmentListSerializer
     permission_classes = [IsConsultant]
 
     def get_queryset(self):
-        user = self.request.user
-        return Appointment.objects.filter(consultant=user).order_by("scheduled_at")
+        return Appointment.objects.filter(consultant=self.request.user)
 
 
 class AppointmentStatusUpdateView(generics.UpdateAPIView):
-    queryset = Appointment.objects.all()
     serializer_class = AppointmentStatusSerializer
     permission_classes = [IsConsultant]
 
-    def get_object(self):
-        appointment = super().get_object()
-        if appointment.consultant != self.request.user:
-            raise PermissionDenied("Not your appointment")
-        return appointment
+    def get_queryset(self):
+        return Appointment.objects.filter(consultant=self.request.user)

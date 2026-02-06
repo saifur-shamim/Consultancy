@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import BookAppointmentView, MyAppointmentsView, AppointmentStatusUpdateView
+from .views import BookAppointmentView, ConsultantAppointmentListView, AppointmentStatusUpdateView
 
 urlpatterns = [
     path("book/", BookAppointmentView.as_view()),
-    path("my/", MyAppointmentsView.as_view()),
-    path("<int:pk>/status/", AppointmentStatusUpdateView.as_view()),
+    path("my/", ConsultantAppointmentListView.as_view()),
+    path("status/<int:pk>/", AppointmentStatusUpdateView.as_view()),
 ]
+
